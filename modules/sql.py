@@ -6,8 +6,9 @@ from pymysql.converters import escape_string
 def check(func):
     def wrap(self, *args, **kwargs):
         try:
-            return func(self, *args, **kwargs)
-        except pymysql.OperationalError as e:
+            res = func(self, *args, **kwargs)
+            return res
+        except pymysql.err.InterfaceError as e:
             self.status = False
             self.__connect()
             self.logger.warning(e.__str__())
@@ -92,3 +93,7 @@ class MySQL():
         cur = self.db.cursor()
         cur.execute("UPDATE `users` SET `status` = %s WHERE `id` = %s", (status, uid))
         self.diff = True
+
+    @check
+    def searchDomains(self, uid, status):
+        pass

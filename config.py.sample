@@ -1,0 +1,18 @@
+# Oauth Parameters
+NYCU_Oauth_ID   = ''
+NYCU_Oauth_key  = ''
+NYCU_Oauth_rURL = ''
+
+#MySQL Parameters
+MySQL_Host = ""
+MySQL_User = ""
+MySQL_Pswd = ""
+MySQL_DB   = ""
+
+#JWT Secret Key
+JWT_secretKey   = ''
+
+#DDNS
+DDNS_KeyFile = ""
+DDNS_Server  = ""
+DDNS_Zone    = ""

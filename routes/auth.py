@@ -1,5 +1,5 @@
 from flask import Response, request
-from __main__ import app, g, sql, dns, users, nycu_oauth
+from __main__ import app, g, users
 
 
 @app.route('/oauth/<string:code>', methods = ['GET'])

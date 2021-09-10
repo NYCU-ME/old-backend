@@ -78,3 +78,4 @@ class Users:
         except UnauthorizedError as e:
             self.logger.warning(e.__str__())
             return None
+

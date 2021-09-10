@@ -1,3 +1,5 @@
 config.py
 .DS_Store
 sftp-config.json
+__pycache__
+*.swp

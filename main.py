@@ -3,31 +3,31 @@ import flask_cors
 
 from datetime import timezone, datetime
 
-from nctu_oauth import Oauth
 from modules import Logger, DDNS, MySQL
-from user import Users, UnauthorizedError
+from modules.nctu_oauth import Oauth
+
+from models.users import Users, UnauthorizedError
 
 from config import *
 
 app = Flask(__name__)
 flask_cors.CORS(app)
 
+#modules
 
 sql     = MySQL(Logger("SQL Module", app.logger), MySQL_Host, MySQL_User, MySQL_Pswd, MySQL_DB)
-dns     = DDNS()
-users   = Users(Logger("Users Module", app.logger), sql, JWT_secretKey)
-
+dns     = DDNS(Logger("DDNS Module", app.logger), DDNS_KeyFile, DDNS_Server, DDNS_Zone)
 nycu_oauth = Oauth(redirect_uri = NYCU_Oauth_rURL, 
                    client_id = NYCU_Oauth_ID, 
                    client_secret = NYCU_Oauth_key)
 
+#models
+
+users   = Users(Logger("Users Controller", app.logger), sql, JWT_secretKey)
+
+#controller
+
 from routes import *
-
-# https://id.nycu.edu.tw/o/authorize/?client_id=29ZuGjlHp2R4ctu7lKc6jwLLJjfxrXnuK7LzD55Z&response_type=code&scope=profile
-
-@app.route('/ddns/<path:domain>')
-def newRecord(domain):
-    return ".".join(reversed(domain.split("/")))
 
 @app.before_request
 def before_request():
