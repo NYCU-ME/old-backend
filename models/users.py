@@ -15,6 +15,7 @@ class UnauthorizedError(Exception):
 class Users:
 
     def __init__(self, logger, sql, secret):
+
         self.sql = sql
         self.logger = logger
 
@@ -58,6 +59,7 @@ class Users:
         return token
 
     def authenticate(self, payload): 
+        
         try:
             if not payload:
                 raise UnauthorizedError("not logged")
@@ -82,4 +84,3 @@ class Users:
         except UnauthorizedError as e:
             self.logger.warning(e.__str__())
             return None
-
