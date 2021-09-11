@@ -1,18 +1,25 @@
 # Oauth Parameters
-NYCU_Oauth_ID   = ''
-NYCU_Oauth_key  = ''
-NYCU_Oauth_rURL = ''
+NYCU_Oauth_ID   = r""
+NYCU_Oauth_key  = r""
+NYCU_Oauth_rURL = r""
 
 #MySQL Parameters
-MySQL_Host = ""
-MySQL_User = ""
-MySQL_Pswd = ""
-MySQL_DB   = ""
+MySQL_Host = r""
+MySQL_User = r""
+MySQL_Pswd = r""
+MySQL_DB   = r""
 
 #JWT Secret Key
-JWT_secretKey   = ''
+JWT_secretKey   = r""
 
 #DDNS
-DDNS_KeyFile = ""
-DDNS_Server  = ""
-DDNS_Zone    = ""
+DDNS_KeyFile = r""
+DDNS_Server  = r""
+DDNS_Zone    = r""
+
+#Generals
+Log_Level    = 1
+# 0 -> No Messages
+# 1 -> Only Critical
+# 2 -> Normal
+# 3 -> Verbose

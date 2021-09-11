@@ -10,21 +10,21 @@ def check(func):
             return res
         except pymysql.err.InterfaceError as e:
             self.status = False
-            self.__connect()
-            self.logger.warning(e.__str__())
-        except Exception as e:
-            self.logger.warning(e.__str__())
-            self.db.rollback()
+            self._MySQL__connect()
+            self.logger.critical(e.__str__())
     return wrap
+
 
 class MySQL():
 
+    @check
     def __commit(self):
         while True:
             if self.diff:
                 self.diff = False
                 self.db.commit()
             time.sleep(2)
+
 
     def __connect(self):
         while not self.status:
@@ -39,6 +39,8 @@ class MySQL():
             except Exception as e:
                 self.logger.warning(e.__str__())
                 time.sleep(2)
+        self.logger.info("SQL connection established.")
+        # raise Exception()
 
     def __init__(self, logger, host, user, password, database):
         self.conf = (host, user, password, database)
@@ -95,5 +97,19 @@ class MySQL():
         self.diff = True
 
     @check
-    def searchDomains(self, uid, status):
-        pass
+    def searchDomains(self, uid):
+        if type(uid) != int:
+            raise TypeError("wrong type for field `id`")
+
+        cur = self.db.cursor()
+        cur.execute("SELECT `id`, `domain`, `regDate` FROM `domains` WHERE `userId` = %d and `expDate` < NOW()", (uid, ))
+        cur.execute()
+        return cur.fetchall()
+
+    @check
+    def applyDomain(self, uid, domain):
+        if type(uid) != int:
+            raise TypeError("wrong type for field `id`")
+
+        cur = self.db.cursor()
+        cur.execute("INSERT INTO `domains` (`userID`, `domain`, ``)")
