@@ -17,9 +17,11 @@ DDNS_KeyFile = r""
 DDNS_Server  = r""
 DDNS_Zone    = r""
 
+#Logging
+Logging_Level  = 10 # NOTSET->0; DEBUG->10; INFO->20; WARNING->30; ERROR->40; CRITICAL->50
+Logging_Format = "%(asctime)s [[%(name)s]] %(message)s"
+Logging_DatetimeFormat = "%m/%d/%Y %H:%M:%S"
+
 #Generals
-Log_Level    = 1
-# 0 -> No Messages
-# 1 -> Only Critical
-# 2 -> Normal
-# 3 -> Verbose
+Allowed_DomainName = [".nycu.me"]
+User_Max_DomainNum = 2

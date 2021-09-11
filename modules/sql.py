@@ -51,10 +51,6 @@ class MySQL():
 
     @check
     def getUser(self, uid):
-        if type(uid) != int:
-            x
-            raise TypeError("wrong type for field `id`")
-
         cur = self.db.cursor()
         cur.execute("SELECT `id`, `name`, `username`, `status`, `email` FROM `users` WHERE `id` = %s", (uid, ))
         
@@ -62,54 +58,42 @@ class MySQL():
 
     @check
     def newUser(self, uid, email, name = 'none', status = 'none'):
-        if type(uid) != int:
-            raise TypeError("wrong type for field `id`")
-
         cur = self.db.cursor()
         cur.execute("INSERT INTO `users` (`id`, `username`, `email`, `name`, `status`) VALUES (%s, %s, %s, %s, %s)", (uid, uid, email, name, status))
         self.diff = True
 
     @check
     def changeName(self, uid, name):
-        if type(uid) != int:
-            raise TypeError("wrong type for field `id`")
-
         cur = self.db.cursor()
         cur.execute("UPDATE `users` SET `username` = %s WHERE `id` = %s", (name, uid))
         self.diff = True
 
     @check
     def updateEmail(self, uid, email):
-        if type(uid) != int:
-            raise TypeError("wrong type for field `id`")
-
         cur = self.db.cursor()
         cur.execute("UPDATE `users` SET `email` = %s WHERE `id` = %s", (email, uid))
         self.diff = True
 
     @check
     def updateStatus(self, uid, status):
-        if type(uid) != int:
-            raise TypeError("wrong type for field `id`")
-
         cur = self.db.cursor()
         cur.execute("UPDATE `users` SET `status` = %s WHERE `id` = %s", (status, uid))
         self.diff = True
 
     @check
-    def searchDomains(self, uid):
-        if type(uid) != int:
-            raise TypeError("wrong type for field `id`")
-
+    def listUserDomains(self, uid):
         cur = self.db.cursor()
-        cur.execute("SELECT `id`, `domain`, `regDate` FROM `domains` WHERE `userId` = %d and `expDate` < NOW()", (uid, ))
-        cur.execute()
+        cur.execute("SELECT `id`, `domain`, `regDate` FROM `domains` WHERE `userId` = %s and `expDate` >= NOW()", (uid, ))
+        return cur.fetchall()
+
+    @check
+    def searchDomain(self, domain):
+        cur = self.db.cursor()
+        cur.execute("SELECT `id`, `userID`, `regDate`, `expDate` FROM `domains` WHERE `expDate` >= NOW() AND `domain` = %s", (domain, ))
         return cur.fetchall()
 
     @check
     def applyDomain(self, uid, domain):
-        if type(uid) != int:
-            raise TypeError("wrong type for field `id`")
-
         cur = self.db.cursor()
-        cur.execute("INSERT INTO `domains` (`userID`, `domain`, ``)")
+        cur.execute("INSERT INTO `domains` (`userID`, `domain`, `regDate`, `expDate`) VALUES (%s, %s, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY))", (uid, domain))
+        self.diff = True

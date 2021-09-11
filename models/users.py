@@ -17,6 +17,7 @@ class Users:
     def __init__(self, logger, sql, secret):
         self.sql = sql
         self.logger = logger
+
         self.JWT_secretKey = secret
 
     def login(self, token):
@@ -28,8 +29,9 @@ class Users:
         token['iss'] = 'dns.nycu.me'
         token['exp'] = (now) + 3600
         token['iat'] = token['nbf'] = now
+        token['uid'] = token['username']
 
-        stuId   = int(token['username'])
+        stuId   = int(token['uid'])
         email   = token['email']
         # name    = token['name']
         # status  = token['status']
@@ -37,14 +39,16 @@ class Users:
         oldData = self.sql.getUser(uid = stuId)
 
         if oldData and len(oldData):
-            oldData = oldData[0]
 
+            oldData = oldData[0]
             if oldData[4] != email:
                 self.sql.updateEmail(uid = stuId, email = email)
             # if oldData['status'] != token['status']:
             #     pass                
             # if oldData['name'] != token['name']:
             #     pass
+
+            token['username'] = oldData[2]
 
         else:
             self.sql.newUser(uid = stuId, email = email)

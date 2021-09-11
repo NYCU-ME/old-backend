@@ -1,9 +1,10 @@
 import re
 from enum import Enum
 
-class err(Enum):
+class DNSErrors(Enum):
     NotAllowedDomain    = "NotAllowedDomain"
     NumberLimitExceed   = "NumberLimitExceed"
+    AssignedDomainName  = "AssignedDomainName"
 
 class DNSError(Exception):
 
@@ -15,7 +16,7 @@ class DNSError(Exception):
         return self.msg
 
     def __repr__(self):
-        return "%s: %s" % (self.typ.name, self.msg)
+        return "%s: %s" % (self.typ, self.msg)
 
 class DNS():
     
@@ -33,14 +34,9 @@ class DNS():
         return False
 
     def __check(self, domain):
-        
-        regex = r"/^[a-zA-Z0-9][a-zA-Z0-9-]{1,61}[a-zA-Z0-9]\.[a-zA-Z]{2,}$/ig"
-
-        if not re.fullmatch(regex, domain):
-            return None
 
         for can in self.domains:
-            if self.__isMatch(can, self.domains):
+            if self.__isMatch(can, domain):
                 return can
         return None
 
@@ -48,20 +44,32 @@ class DNS():
         self.logger  = logger
         self.sql     = sql
         self.ddns    = ddns
+        
+        self.User_Max_DomainNum = User_Max_DomainNum
         self.domains = []
         for domain in Allowed_DomainName:
-            self.domains.append(tuple(reversed(domain.strip('.').split('.'))))
+            self.domains.append(tuple(reversed(domain.split('.'))))
+
+        self.domainRegex = re.compile(r"^[A-Za-z0-9_]{2,}$")
 
     def applyDomain(self, uid, domain):
-        if type(uid) != int:
-            raise TypeError("wrong type for field `id`")
-
-        if not __check(domain):
-            raise DNSError(err.NotAllowedDomain, domain)
-
-        if len(self.sql.searchDomains(uid)) >= User_Max_DomainNum:
-            raise DNSError(err.NumberLimitExceed)
         
+        domainName = '.'.join(reversed([i.replace(".", r"\.") for i in domain]))
+
+        for p in domain:
+            if not self.domainRegex.fullmatch(p):
+                raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
+
+        if not self.__check(domain):
+            raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
+
+        if len(self.sql.listUserDomains(uid)) >= self.User_Max_DomainNum:
+            raise DNSError(DNSErrors.NumberLimitExceed)
+
+        if len(self.sql.searchDomain(domainName)) >= 1:
+            raise DNSError(DNSErrors.AssignedDomainName, "%s is used." % (domainName, ))
+
+        self.sql.applyDomain(uid, domainName)
 
     def newRecord(self, uid, record):
         pass
