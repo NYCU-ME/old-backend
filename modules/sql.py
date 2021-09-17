@@ -74,7 +74,7 @@ class MySQL():
     @check
     def listUserDomains(self, uid):
         with self.db.cursor() as cur:
-            cur.execute("SELECT `id`, `domain`, `regDate` FROM `domains` WHERE `userId` = %s and `expDate` >= NOW()", (uid, ))
+            cur.execute("SELECT `id`, `domain`, `regDate`, `expDate` FROM `domains` WHERE `userId` = %s and `expDate` >= NOW()", (uid, ))
             return cur.fetchall()
 
     @check
@@ -87,10 +87,32 @@ class MySQL():
     def applyDomain(self, uid, domain):
         with self.db.cursor() as cur:
             cur.execute("INSERT INTO `domains` (`userID`, `domain`, `regDate`, `expDate`) VALUES (%s, %s, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY))", (uid, domain))
-            self.diff = True
 
     @check
     def releaseDomain(self, domain):
         with self.db.cursor() as cur:
             cur.execute("UPDATE `domains` SET `expDate` = NOW() WHERE `domain` = %s", (domain, ))
-            self.diff = True
+
+    @check
+    def listRecords(self, domainId, type_ = None):
+        with self.db.cursor() as cur:
+            if not type_:
+                cur.execute("SELECT `type`, `value`, `ttl` FROM `records` WHERE expDate IS NULL and domain = %s", (domainId, ))
+            else:
+                cur.execute("SELECT `type`, `value`, `ttl` FROM `records` WHERE expDate IS NULL and domain = %s and type = %s", (domainId, type_))
+            return cur.fetchall()
+    @check
+    def searchRecord(self, domainId, type_, value):
+        with self.db.cursor() as cur:
+            cur.execute("SELECT `type`, `value`, `ttl` FROM `records` WHERE expDate IS NULL AND domain = %s AND type = %s AND value = %s", (domainId, type_, value))
+            return cur.fetchall()
+
+    @check
+    def addRecord(self, domainId, type_, value, ttl):
+        with self.db.cursor() as cur:
+            cur.execute("INSERT INTO `records` (`domain`, `type`, `value`, `ttl`, `regDate`) VALUES (%s, %s, %s, %s, NOW())", (domainId, type_, value, ttl))
+
+    @check
+    def delRecord(self, domainId, type_, value):
+        with self.db.cursor() as cur:
+            cur.execute("UPDATE `records` SET `expDate` = NOW() WHERE domain = %s and type = %s and value = %s", (domainId, type_, value))

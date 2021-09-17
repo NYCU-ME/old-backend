@@ -26,7 +26,9 @@ nycu_oauth = Oauth(redirect_uri = NYCU_Oauth_rURL,
 
 #models
 users   = Users(logging.getLogger("User Models"), sql, JWT_secretKey)
-dns     = DNS(logging.getLogger("DNS Models"), sql, ddns, Allowed_DomainName, User_Max_DomainNum)
+dns     = DNS(logging.getLogger("DNS Models"), sql, ddns, Allowed_DomainName, 
+                                                          Allowed_RecordType, 
+                                                          User_Max_DomainNum)
 
 #controller
 @app.before_request

@@ -63,13 +63,13 @@ class DDNS:
 
         _thread.start_new_thread(self.__write, tuple())
 
-    def add_record(domain, rectype, value, ttl = 5):
+    def addRecord(self, domain, rectype, value, ttl = 5):
         if domain != "" and rectype != "" and value != "":
-            nsupdate.queue.put("update add %s %d %s %s" % (domain, ttl, rectype, value))
+            self.queue.put("update add %s %d %s %s" % (domain, ttl, rectype, value))
 
-    def del_record(domain, rectype, value):
+    def delRecord(self, domain, rectype, value):
         if domain != "":
-            nsupdate.queue.put("update delete %s %s %s" % (domain, rectype, value))
+            self.queue.put("update delete %s %s %s" % (domain, rectype, value))
 
 if __name__ == "__main__":
     # for test

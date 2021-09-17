@@ -3,3 +3,4 @@ config.py
 sftp-config.json
 __pycache__
 *.swp
+*.log
