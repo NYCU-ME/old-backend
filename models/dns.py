@@ -38,7 +38,9 @@ def check(domains, domain):
         
         for i in range(len(rule)):
             if rule[i] == '*':
-                continue
+                if len(sample[i]) >= 4:
+                    return len(sample) == i + 1 and True
+                return False
             elif rule[i] == '':
                 return True
             elif rule[i] != sample[i]:
