@@ -23,7 +23,7 @@ class DNSError(Exception):
     def __repr__(self):
         return "%s: %s" % (self.typ, self.msg)
 
-def check(domains, domain):
+def check(domains, domain, allow3 = 0):
 
     for p in domain:
         if not domainRegex.fullmatch(p):
@@ -31,14 +31,14 @@ def check(domains, domain):
         if p[0] == '-' or p[-1] == '-':
             return None
 
-    def isMatch(rule, sample):
+    def isMatch(rule, sample, allow3):
     
         if len(rule) > len(sample):
             return False
         
         for i in range(len(rule)):
             if rule[i] == '*':
-                if len(sample[i]) >= 4:
+                if allow3 or len(sample[i]) >= 4:
                     return len(sample) == i + 1 and True
                 return False
             elif rule[i] == '':
@@ -48,7 +48,7 @@ def check(domains, domain):
         return False
 
     for can in domains:
-        if isMatch(can, domain):
+        if isMatch(can, domain, allow3):
             return can
 
     return None
@@ -76,7 +76,7 @@ class DNS():
         
         domainName = '.'.join(reversed([i.replace(".", r"\.") for i in domain]))
 
-        if not check(self.domains, domain):
+        if not check(self.domains, domain, uid == "109550028"):
             raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
 
         if len(self.sql.searchDomain(domainName)) >= 1:
@@ -91,7 +91,7 @@ class DNS():
 
         domainName = '.'.join(reversed([i.replace(".", r"\.") for i in domain]))
 
-        if not check(self.domains, domain):
+        if not check(self.domains, domain, 1):
             raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
 
         domain_entry = self.sql.searchDomain(domainName)
@@ -107,8 +107,8 @@ class DNS():
     def addRecord(self, uid, domain, type_, value, ttl):
         
         domainName = '.'.join(reversed([i.replace(".", r"\.") for i in domain]))
- 
-        if not check(self.domains, domain):
+        
+        if not check(self.domains, domain, 1):
             raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
         if not (domain := self.sql.searchDomain(domainName)):
             raise DNSError(DNSErrors.PermissionDenied, "You cannot add a new record to %s." % (domainName, ))
@@ -131,7 +131,7 @@ class DNS():
 
         domainName = '.'.join(reversed([i.replace(".", r"\.") for i in domain]))
  
-        if not check(self.domains, domain):
+        if not check(self.domains, domain, 1):
             raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
         if not (domain := self.sql.searchDomain(domainName)):
             raise DNSError(DNSErrors.PermissionDenied, "You cannot modify %s." % (domainName, ))

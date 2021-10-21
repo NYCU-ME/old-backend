@@ -4,11 +4,11 @@ import flask_cors
 from datetime import timezone, datetime
 import logging
 
-from modules import DDNS, MySQL
-from modules.nctu_oauth import Oauth
+from models import DDNS, MySQL
+from models.nctu_oauth import Oauth
 
-from models.users import Users, UnauthorizedError
-from models.dns  import DNS
+from controllers.users import Users, UnauthorizedError
+from controllers.dns  import DNS
 
 from config import *
 
@@ -17,20 +17,20 @@ logging.basicConfig(encoding="utf-8", level=Logging_Level,
 app = Flask(__name__)
 flask_cors.CORS(app)
 
-#modules
+#models
 sql     = MySQL(logging.getLogger("SQL Module"), MySQL_Host, MySQL_User, MySQL_Pswd, MySQL_DB)
 ddns    = DDNS(logging.getLogger("DDNS Module"), DDNS_KeyFile, DDNS_Server, DDNS_Zone)
 nycu_oauth = Oauth(redirect_uri = NYCU_Oauth_rURL, 
                    client_id = NYCU_Oauth_ID, 
                    client_secret = NYCU_Oauth_key)
 
-#models
+#controller
 users   = Users(logging.getLogger("User Models"), sql, JWT_secretKey)
 dns     = DNS(logging.getLogger("DNS Models"), sql, ddns, Allowed_DomainName, 
                                                           Allowed_RecordType, 
                                                           User_Max_DomainNum)
 
-#controller
+#route
 @app.before_request
 def before_request():
     g.user = users.authenticate(request.headers.get('Authorization'))
