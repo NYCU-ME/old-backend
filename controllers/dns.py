@@ -1,8 +1,5 @@
-import re
 import _thread
 from enum import Enum
-
-domainRegex = re.compile(r"^[A-Za-z0-9_]{2,}$")
 
 class DNSErrors(Enum):
     NXDomain    = "Non-ExistentDomain"
@@ -20,36 +17,6 @@ class DNSError(Exception):
 
     def __repr__(self):
         return "%s: %s" % (self.typ, self.msg)
-
-def check(domains, domain, allow3 = 0):
-
-    for p in domain:
-        if not domainRegex.fullmatch(p):
-            return None
-        if p[0] == '-' or p[-1] == '-':
-            return None
-
-    def isMatch(rule, sample, allow3):
-    
-        if len(rule) > len(sample):
-            return False
-        
-        for i in range(len(rule)):
-            if rule[i] == '*':
-                if allow3 or len(sample[i]) >= 4:
-                    return len(sample) == i + 1 and True
-                return False
-            elif rule[i] == '':
-                return True
-            elif rule[i] != sample[i]:
-                return False
-        return False
-
-    for can in domains:
-        if isMatch(can, domain, allow3):
-            return can
-
-    return None
 
 class DNS():
 
