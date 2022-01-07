@@ -16,7 +16,8 @@ def whoami():
     if g.user:
         res = g.user
         res['domains'] = []
-        for domain in dns.listUserDomains(res['uid']):
+
+        for domain in dns._DNS__listUserDomains(res['uid']):
             res['domains'].append({
                 "id": domain[0],
                 "domain": domain[1],

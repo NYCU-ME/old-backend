@@ -1,13 +1,11 @@
 import re
+import _thread
 from enum import Enum
 
 domainRegex = re.compile(r"^[A-Za-z0-9_]{2,}$")
 
 class DNSErrors(Enum):
-    NotAllowedDomain     = "NotAllowedDomain"
-    NumberLimitExceed    = "NumberLimitExceed"
-    AssignedDomainName   = "AssignedDomainName"
-    PermissionDenied     = "PermissionDenied"
+    NXDomain    = "Non-ExistentDomain"
     NotAllowedRecordType = "NotAllowedRecordType"
     DuplicateRecord      = "DuplicateRecord" 
 
@@ -68,84 +66,68 @@ class DNS():
             self.domains.append(tuple(reversed(domain.split('.'))))
 
     
-    def listUserDomains(self, uid):
-        
+    def __listUserDomains(self, uid):
+
         return self.sql.listUserDomains(uid)
 
-    def applyDomain(self, uid, domain):
-        
-        domainName = '.'.join(reversed([i.replace(".", r"\.") for i in domain]))
+    def __listRecords(self, domain, type_ = None):
 
-        if not check(self.domains, domain, uid == "109550028"):
-            raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
+        return self.sql.listRecords(domain, type_)
 
-        if len(self.sql.searchDomain(domainName)) >= 1:
-            raise DNSError(DNSErrors.AssignedDomainName, "%s is used." % (domainName, ))
-        
-        if len(self.listUserDomains(uid)) >= self.User_Max_DomainNum:
-            raise DNSError(DNSErrors.NumberLimitExceed)
+    def __addRecord(self, domainName, domainId, type_, value, ttl):
+        self.sql.addRecord(domainId, type_, value, ttl)
+        self.ddns.addRecord(domainName, type_, value, ttl)
+
+    def __delRecord(self, domainName, domainId, type_, value):
+
+        self.sql.delRecord(domainId, type_, value)
+        self.ddns.delRecord(domainName, type_, value)
+
+    def applyDomain(self, uid, domainName):
 
         self.sql.applyDomain(uid, domainName)
 
-    def releaseDomain(self, uid, domain):
-
-        domainName = '.'.join(reversed([i.replace(".", r"\.") for i in domain]))
-
-        if not check(self.domains, domain, 1):
-            raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
+    def releaseDomain(self, uid, domainName):
 
         domain_entry = self.sql.searchDomain(domainName)
+        domainId, domainOwner = domain_entry[0][:2]
 
-        if len(domain_entry) == 0:
-            raise DNSError(DNSErrors.AssignedDomainName, "%s is not being used." % (domainName, ))
-
-        if domain_entry[0][1] != uid:
-            raise DNSError(DNSErrors.PermissionDenied, "You cannot release %s." % (domainName, ))
+        for i in self.__listRecords(domainId):
+            type_, value, ttl = i
+            self.__delRecord(domainName, domainId, type_, value)
 
         self.sql.releaseDomain(domainName)
 
-    def addRecord(self, uid, domain, type_, value, ttl):
+    def addRecord(self, uid, domainName, type_, value, ttl):
         
-        domainName = '.'.join(reversed([i.replace(".", r"\.") for i in domain]))
+        domain_entry = self.sql.searchDomain(domainName)
         
-        if not check(self.domains, domain, 1):
-            raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
-        if not (domain := self.sql.searchDomain(domainName)):
-            raise DNSError(DNSErrors.PermissionDenied, "You cannot add a new record to %s." % (domainName, ))
+        if not domain_entry:
+            raise DNSError(DNSErrors.NXDomain, "NXDomain")
 
-        domainId, domainOwner = domain[0][:2]
+        domainId, domainOwner = domain_entry[0][:2]
 
-        if domainOwner != uid:
-            raise DNSError(DNSErrors.PermissionDenied, "You cannot add a new record to %s." % (domainName,))
-        
         if type_ not in self.rectypes:
             raise DNSError(DNSErrors.NotAllowedRecordType, "You cannot add a new record with type %s" % (type_, ))
 
         if self.sql.searchRecord(domainId, type_, value):
             raise DNSError(DNSErrors.DuplicateRecord, "You have created same record.")
 
-        self.sql.addRecord(domainId, type_, value, ttl)
-        self.ddns.addRecord(domainName, type_, value, ttl)
+        self.__addRecord(domainName, domainId, type_, value, ttl)
 
-    def delRecord(self, uid, domain, type_, value):
+    def delRecord(self, uid, domainName, type_, value):
 
-        domainName = '.'.join(reversed([i.replace(".", r"\.") for i in domain]))
- 
-        if not check(self.domains, domain, 1):
-            raise DNSError(DNSErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
-        if not (domain := self.sql.searchDomain(domainName)):
-            raise DNSError(DNSErrors.PermissionDenied, "You cannot modify %s." % (domainName, ))
-
-        domainId, domainOwner = domain[0][:2]
-
-        if domainOwner != uid:
-            raise DNSError(DNSErrors.PermissionDenied, "You cannot modify %s." % (domainName,))
+        domain_entry = self.sql.searchDomain(domainName)
         
+        if not domain_entry:
+            raise DNSError(DNSErrors.NXDomain, "NXDomain")
+
+        domainId, domainOwner = domain_entry[0][:2]
+
         if type_ not in self.rectypes:
             raise DNSError(DNSErrors.NotAllowedRecordType, "You cannot have a record with type %s" % (type_, ))
 
         if not self.sql.searchRecord(domainId, type_, value):
-            raise DNSError(DNSErrors.DuplicateRecord, "No such record.")
+            raise DNSError(DNSErrors.DuplicateRecord, "You haven't created such a record.")
 
-        self.sql.delRecord(domainId, type_, value)
-        self.ddns.delRecord(domainName, type_, value)
+        self.__delRecord(domainName, domainId, type_, value)

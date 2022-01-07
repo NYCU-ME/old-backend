@@ -48,7 +48,7 @@ class MySQL():
     @check
     def getUser(self, uid):
         with self.db.cursor() as cur:
-            cur.execute("SELECT `id`, `name`, `username`, `status`, `email` FROM `users` WHERE `id` = %s", (uid, ))
+            cur.execute("SELECT `id`, `name`, `username`, `status`, `email`, `limit` FROM `users` WHERE `id` = %s", (uid, ))
             return cur.fetchall()
 
     @check
@@ -74,7 +74,7 @@ class MySQL():
     @check
     def listUserDomains(self, uid):
         with self.db.cursor() as cur:
-            cur.execute("SELECT `id`, `domain`, `regDate`, `expDate` FROM `domains` WHERE `userId` = %s and `expDate` >= NOW()", (uid, ))
+            cur.execute("SELECT `id`, `domain`, `regDate`, `expDate` FROM `domains` WHERE `userId` = %s and `status` = 1", (uid, ))
             return cur.fetchall()
 
     @check
@@ -91,7 +91,7 @@ class MySQL():
     @check
     def releaseDomain(self, domain):
         with self.db.cursor() as cur:
-            cur.execute("UPDATE `domains` SET `expDate` = NOW() WHERE `domain` = %s", (domain, ))
+            cur.execute("UPDATE `domains` SET `expDate` = NOW(), `status` = 0 WHERE `domain` = %s", (domain, ))
 
     @check
     def listRecords(self, domainId, type_ = None):
@@ -115,4 +115,4 @@ class MySQL():
     @check
     def delRecord(self, domainId, type_, value):
         with self.db.cursor() as cur:
-            cur.execute("UPDATE `records` SET `expDate` = NOW() WHERE domain = %s and type = %s and value = %s", (domainId, type_, value))
+            cur.execute("UPDATE `records` SET `expDate` = NOW(), `status` = 0 WHERE domain = %s and type = %s and value = %s", (domainId, type_, value))
