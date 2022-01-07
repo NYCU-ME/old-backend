@@ -1,7 +1,10 @@
 from flask import Response, request
 from __main__ import app, g, users, nycu_oauth, dns
 
-
+@app.before_request
+def before_request():
+    g.user = users.authenticate(request.headers.get('Authorization'))
+    
 @app.route("/oauth/<string:code>", methods = ['GET'])
 def getToken(code):
     token = nycu_oauth.get_token(code)

@@ -20,17 +20,13 @@ class DNSError(Exception):
 
 class DNS():
 
-    def __init__(self, logger, sql, ddns, AllowedDomainName, AllowedRecordType, User_Max_DomainNum):
+    def __init__(self, logger, sql, ddns, AllowedRecordType):
         
         self.logger  = logger
         self.sql     = sql
         self.ddns    = ddns
         
         self.rectypes = AllowedRecordType
-        self.User_Max_DomainNum = User_Max_DomainNum
-        self.domains = []
-        for domain in AllowedDomainName:
-            self.domains.append(tuple(reversed(domain.split('.'))))
 
     
     def __listUserDomains(self, uid):
@@ -42,6 +38,7 @@ class DNS():
         return self.sql.listRecords(domain, type_)
 
     def __addRecord(self, domainName, domainId, type_, value, ttl):
+        
         self.sql.addRecord(domainId, type_, value, ttl)
         self.ddns.addRecord(domainName, type_, value, ttl)
 

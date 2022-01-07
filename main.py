@@ -26,15 +26,9 @@ nycu_oauth = Oauth(redirect_uri = NYCU_Oauth_rURL,
 
 #controller
 users   = Users(logging.getLogger("User Controller"), sql, JWT_secretKey, Allowed_DomainName)
-dns     = DNS(logging.getLogger("DNS Controller"), sql, ddns, Allowed_DomainName, 
-                                                          Allowed_RecordType, 
-                                                          User_Max_DomainNum)
+dns     = DNS(logging.getLogger("DNS Controller"), sql, ddns, Allowed_RecordType)
 
 #route
-@app.before_request
-def before_request():
-    g.user = users.authenticate(request.headers.get('Authorization'))
-
 from routes import *
 
 if __name__ == "__main__":

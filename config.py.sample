@@ -25,4 +25,3 @@ Logging_DatetimeFormat = "%m/%d/%Y %H:%M:%S"
 #Generals
 Allowed_DomainName = ["*.nycu.me"]
 Allowed_RecordType = ["A", "AAAA", "TXT", "MX", "CNAME", "NS"]
-User_Max_DomainNum = 2
