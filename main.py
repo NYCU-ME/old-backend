@@ -18,15 +18,15 @@ app = Flask(__name__)
 flask_cors.CORS(app)
 
 #models
-sql     = MySQL(logging.getLogger("SQL Module"), MySQL_Host, MySQL_User, MySQL_Pswd, MySQL_DB)
-ddns    = DDNS(logging.getLogger("DDNS Module"), DDNS_KeyFile, DDNS_Server, DDNS_Zone)
+sql     = MySQL(logging.getLogger("SQL Models"), MySQL_Host, MySQL_User, MySQL_Pswd, MySQL_DB)
+ddns    = DDNS(logging.getLogger("DDNS Models"), DDNS_KeyFile, DDNS_Server, DDNS_Zone)
 nycu_oauth = Oauth(redirect_uri = NYCU_Oauth_rURL, 
                    client_id = NYCU_Oauth_ID, 
                    client_secret = NYCU_Oauth_key)
 
 #controller
-users   = Users(logging.getLogger("User Models"), sql, JWT_secretKey)
-dns     = DNS(logging.getLogger("DNS Models"), sql, ddns, Allowed_DomainName, 
+users   = Users(logging.getLogger("User Controller"), sql, JWT_secretKey, Allowed_DomainName)
+dns     = DNS(logging.getLogger("DNS Controller"), sql, ddns, Allowed_DomainName, 
                                                           Allowed_RecordType, 
                                                           User_Max_DomainNum)
 
