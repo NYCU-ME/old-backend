@@ -80,7 +80,7 @@ class MySQL():
     @check
     def searchDomain(self, domain):
         with self.db.cursor() as cur:
-            cur.execute("SELECT `id`, `userID`, `regDate`, `expDate` FROM `domains` WHERE `expDate` >= NOW() AND `domain` = %s", (domain, ))
+            cur.execute("SELECT `id`, `userId`, `regDate`, `expDate` FROM `domains` WHERE `expDate` >= NOW() AND `domain` = %s", (domain, ))
             return cur.fetchall()
 
     @check

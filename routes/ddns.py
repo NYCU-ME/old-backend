@@ -8,9 +8,10 @@ def addRecord(domain, type_, value):
     if not g.user:
         return {"message": "Unauth."}, 401
 
-    user = users.getUser(g.user['uid'])
-    domain = domain.strip('/').split('/')
-    domainName = '.'.join(reversed(domain))
+    user         = users.getUser(g.user['uid'])
+    domainStruct = domain.strip('/').split('/')
+    domainName   = '.'.join(reversed(domainStruct))
+    domain       = dns.getDomain(domainName)
 
     req = request.json
     ttl = 5
@@ -19,9 +20,9 @@ def addRecord(domain, type_, value):
         ttl = int(req[ttl])
 
     try:
-        if not users.authorize(user, "MODIFY", domain):
+        if not users.authorize(user, "MODIFY", domainStruct):
             return {"errorType": "PermissionDenied", "msg": ""}, 403
-        dns.addRecord(user['uid'], domainName, type_, value, ttl)
+        dns.addRecord(user['uid'], domain, type_, value, ttl)
     except OperationError as e:
         return {"errorType": e.typ, "msg": e.msg}, 403
     except DNSError as e:
@@ -34,14 +35,15 @@ def delRecord(domain, type_, value):
     if not g.user:
         return {"message": "Unauth."}, 401
 
-    user = users.getUser(g.user['uid'])
-    domain = domain.strip('/').split('/')
-    domainName = '.'.join(reversed(domain))
+    user         = users.getUser(g.user['uid'])
+    domainStruct = domain.strip('/').split('/')
+    domainName   = '.'.join(reversed(domainStruct))
+    domain       = dns.getDomain(domainName)
 
     try:
-        if not users.authorize(user, "MODIFY", domain):
+        if not users.authorize(user, "MODIFY", domainStruct):
             return {"errorType": "PermissionDenied", "msg": ""}, 403
-        dns.delRecord(user['uid'], domainName, type_, value)
+        dns.delRecord(user['uid'], domain, type_, value)
     except OperationError as e:
         return {"errorType": e.typ, "msg": e.msg}, 403
     except DNSError as e:

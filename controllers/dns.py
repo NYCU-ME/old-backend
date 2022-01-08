@@ -2,9 +2,11 @@ import _thread
 from enum import Enum
 
 class DNSErrors(Enum):
-    NXDomain    = "Non-ExistentDomain"
+
+    NXDomain             = "Non-ExistentDomain"
     NotAllowedRecordType = "NotAllowedRecordType"
     DuplicateRecord      = "DuplicateRecord" 
+    NotAllowedOperation  = "NotAllowedOperation" 
 
 class DNSError(Exception):
 
@@ -27,71 +29,78 @@ class DNS():
         self.ddns    = ddns
         
         self.rectypes = AllowedRecordType
-
     
     def __listUserDomains(self, uid):
 
         return self.sql.listUserDomains(uid)
 
-    def __listRecords(self, domain, type_ = None):
+    def __listRecords(self, domainId, type_ = None):
 
-        return self.sql.listRecords(domain, type_)
+        return self.sql.listRecords(domainId, type_)
 
-    def __addRecord(self, domainName, domainId, type_, value, ttl):
-        
-        self.sql.addRecord(domainId, type_, value, ttl)
-        self.ddns.addRecord(domainName, type_, value, ttl)
+    def __addRecord(self, domain, type_, value, ttl):
 
-    def __delRecord(self, domainName, domainId, type_, value):
+        self.sql.addRecord(domain['id'], type_, value, ttl)
+        self.ddns.addRecord(domain['domainName'], type_, value, ttl)
 
-        self.sql.delRecord(domainId, type_, value)
-        self.ddns.delRecord(domainName, type_, value)
+    def __delRecord(self, domain, type_, value):
 
-    def applyDomain(self, uid, domainName):
+        self.sql.delRecord(domain['id'], type_, value)
+        self.ddns.delRecord(domain['domainName'], type_, value)
 
-        self.sql.applyDomain(uid, domainName)
 
-    def releaseDomain(self, uid, domainName):
+    def getDomain(self, domainName):
 
         domain_entry = self.sql.searchDomain(domainName)
-        domainId, domainOwner = domain_entry[0][:2]
+        domain = {'domainName': domainName, 'status': 0}
 
-        for i in self.__listRecords(domainId):
+        if domain_entry:
+            domain['id'], domain['userId'], domain['regDate'], domain['expDate'] = domain_entry[0]
+            domain['status'] = 1
+            domain['records'] = []
+            for rec in self.__listRecords(domain['id']):
+                domain['records'].append({
+                    'type': rec[0],
+                    'value': rec[1],
+                    'ttl': rec[2]
+                    })
+
+        return domain
+
+    def applyDomain(self, uid, domain):
+
+        self.sql.applyDomain(uid, domain['domainName'])
+
+    def releaseDomain(self, uid, domain):
+
+        for i in self.__listRecords(domain['id']):
             type_, value, ttl = i
-            self.__delRecord(domainName, domainId, type_, value)
+            self.__delRecord(domain, type_, value)
 
-        self.sql.releaseDomain(domainName)
+        self.sql.releaseDomain(domain['domainName'])
 
-    def addRecord(self, uid, domainName, type_, value, ttl):
+    def addRecord(self, uid, domain, type_, value, ttl):
         
-        domain_entry = self.sql.searchDomain(domainName)
-        
-        if not domain_entry:
-            raise DNSError(DNSErrors.NXDomain, "NXDomain")
-
-        domainId, domainOwner = domain_entry[0][:2]
-
         if type_ not in self.rectypes:
             raise DNSError(DNSErrors.NotAllowedRecordType, "You cannot add a new record with type %s" % (type_, ))
 
-        if self.sql.searchRecord(domainId, type_, value):
-            raise DNSError(DNSErrors.DuplicateRecord, "You have created same record.")
+        for rec in domain['records']:
+            if rec['type'] == type_ and rec['value'] == value:
+                raise DNSError(DNSErrors.DuplicateRecord, "You have created same record.")
 
-        self.__addRecord(domainName, domainId, type_, value, ttl)
+        self.__addRecord(domain, type_, value, ttl)
 
-    def delRecord(self, uid, domainName, type_, value):
-
-        domain_entry = self.sql.searchDomain(domainName)
-        
-        if not domain_entry:
-            raise DNSError(DNSErrors.NXDomain, "NXDomain")
-
-        domainId, domainOwner = domain_entry[0][:2]
+    def delRecord(self, uid, domain, type_, value):
 
         if type_ not in self.rectypes:
             raise DNSError(DNSErrors.NotAllowedRecordType, "You cannot have a record with type %s" % (type_, ))
 
-        if not self.sql.searchRecord(domainId, type_, value):
-            raise DNSError(DNSErrors.DuplicateRecord, "You haven't created such a record.")
+        flag = 1
+        for rec in domain['records']:
+            if rec['type'] == type_ and rec['value'] == value:
+                flag = 0
 
-        self.__delRecord(domainName, domainId, type_, value)
+        if flag:
+            raise DNSError(DNSErrors.NotAllowedOperation, "You haven't created same record.")
+
+        self.__delRecord(domain, type_, value)

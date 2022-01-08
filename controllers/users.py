@@ -120,6 +120,9 @@ class Users:
 
     def authorize(self, user, action, domain):
 
+        # This function will check if the user performs a valid operation 
+        # action in ["APPLY", "RELEASE", "MODIFY"]
+
         def check(domains, domain):
             
             for p in domain:
@@ -162,23 +165,29 @@ class Users:
             return False
 
         # if user['uid'] == '109550028':
-        #     # super user
+        #     # super user can do everything except registering for a registered domain
         #     if action == "APPLY" and len(domainInfo) == 1:
         #         raise OperationError(OperationErrors.AssignedDomainName, "%s is being used." % (domainName, ))
         #     return True
 
         if level == 3 and len(domainInfo) == 0:
-            # domain is free
+            # domain is free, you can only register it
             if len(self.sql.listUserDomains(user['uid'])) >= user['limit']:
                 raise OperationError(OperationErrors.NumberLimitExceed, "You cannot apply for more domains")
             if len(domain[2]) <= 3:
                 raise OperationError(OperationErrors.ReservedDomain, "Subdomains with its length no more than 3 are reserved.")
+            if action == "APPLY":
+                return True
+            else:
+                raise OperationError(OperationErrors.PermissionDenied, "You cannot modify domain %s which you don't have." % (domainName, ))
 
-            return True
+
         elif len(domainInfo) == 1 and domainInfo[0][1] == user['uid']:
+            # domain is yours, you can not register it again
             if action == "APPLY":
                 raise OperationError(OperationErrors.AssignedDomainName, "%s is being used." % (domainName, ))
             return True
         
+        # domain is not yours, you cannot do anything
         raise OperationError(OperationErrors.PermissionDenied, "You cannot modify domain %s." % (domainName, ))
 
