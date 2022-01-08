@@ -86,12 +86,17 @@ class MySQL():
     @check
     def applyDomain(self, uid, domain):
         with self.db.cursor() as cur:
-            cur.execute("INSERT INTO `domains` (`userID`, `domain`, `regDate`, `expDate`) VALUES (%s, %s, NOW(), DATE_ADD(NOW(), INTERVAL 30 DAY))", (uid, domain))
+            cur.execute("INSERT INTO `domains` (`userID`, `domain`, `regDate`, `expDate`) VALUES (%s, %s, NOW(), DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 30 DAY), '%%Y-%%m-%%d 00:00:00'))", (uid, domain))
 
     @check
-    def releaseDomain(self, domain):
+    def releaseDomain(self, domainId):
         with self.db.cursor() as cur:
-            cur.execute("UPDATE `domains` SET `expDate` = NOW(), `status` = 0 WHERE `domain` = %s", (domain, ))
+            cur.execute("UPDATE `domains` SET `expDate` = NOW(), `status` = 0 WHERE `id` = %s", (domainId, ))
+
+    @check
+    def renewDomain(self, domainId):
+        with self.db.cursor() as cur:
+            cur.execute("UPDATE `domains` SET `expDate` = DATE_FORMAT(DATE_ADD(NOW(), INTERVAL 30 DAY), '%%Y-%%m-%%d 00:00:00') WHERE `id` = %s", (domainId, ))
 
     @check
     def listRecords(self, domainId, type_ = None):

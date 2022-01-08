@@ -29,10 +29,6 @@ class DNS():
         self.ddns    = ddns
         
         self.rectypes = AllowedRecordType
-    
-    def __listUserDomains(self, uid):
-
-        return self.sql.listUserDomains(uid)
 
     def __listRecords(self, domainId, type_ = None):
 
@@ -55,10 +51,13 @@ class DNS():
         domain = {'domainName': domainName, 'status': 0}
 
         if domain_entry:
+
             domain['id'], domain['userId'], domain['regDate'], domain['expDate'] = domain_entry[0]
             domain['status'] = 1
             domain['records'] = []
+
             for rec in self.__listRecords(domain['id']):
+
                 domain['records'].append({
                     'type': rec[0],
                     'value': rec[1],
@@ -71,13 +70,17 @@ class DNS():
 
         self.sql.applyDomain(uid, domain['domainName'])
 
+    def renewDomain(self, domain):
+
+        self.sql.renewDomain(domain['id'])
+
     def releaseDomain(self, uid, domain):
 
         for i in self.__listRecords(domain['id']):
             type_, value, ttl = i
             self.__delRecord(domain, type_, value)
 
-        self.sql.releaseDomain(domain['domainName'])
+        self.sql.releaseDomain(domain['id'])
 
     def addRecord(self, uid, domain, type_, value, ttl):
         

@@ -49,6 +49,10 @@ class Users:
         for domain in Allowed_DomainName:
             self.domains.append(tuple(reversed(domain.split('.'))))
 
+    def __listUserDomains(self, uid):
+
+        return self.sql.listUserDomains(uid)
+
     def getUser(self, uid):
 
         user_data = self.sql.getUser(uid)
@@ -58,6 +62,11 @@ class Users:
 
         user = {}
         user['uid'], user['name'], user['username'], user['status'], user['email'], user['limit'] = user_data[0]
+        del user['status'], user['name']
+        user['domains'] = []
+
+        for domain in self.__listUserDomains(user['uid']):
+            user['domains'].append(domain[1]) # domainName
 
         return user
 
@@ -121,7 +130,7 @@ class Users:
     def authorize(self, user, action, domain):
 
         # This function will check if the user performs a valid operation 
-        # action in ["APPLY", "RELEASE", "MODIFY"]
+        # action in ["APPLY", "RELEASE", "MODIFY", "RENEW"]
 
         def check(domains, domain):
             
@@ -157,7 +166,7 @@ class Users:
         domainInfo = self.sql.searchDomain('.'.join(reversed(domain[:3]))) # get level 3 domain
         level      = len(domain)
 
-        if level <= 2 or not check(self.domains, domain): 
+        if level <= 2 or not check(self.domains, domain) or domain[2].startswith('_'): 
             # not a valid domain
             raise OperationError(OperationErrors.NotAllowedDomain, "%s is not allowed." % (domainName, ))
 
@@ -172,22 +181,25 @@ class Users:
 
         if level == 3 and len(domainInfo) == 0:
             # domain is free, you can only register it
-            if len(self.sql.listUserDomains(user['uid'])) >= user['limit']:
+            if action == "APPLY" and len(self.sql.listUserDomains(user['uid'])) >= user['limit']:
                 raise OperationError(OperationErrors.NumberLimitExceed, "You cannot apply for more domains")
             if len(domain[2]) <= 3:
                 raise OperationError(OperationErrors.ReservedDomain, "Subdomains with its length no more than 3 are reserved.")
             if action == "APPLY":
                 return True
-            else:
-                raise OperationError(OperationErrors.PermissionDenied, "You cannot modify domain %s which you don't have." % (domainName, ))
-
+            
+            raise OperationError(OperationErrors.PermissionDenied, "You cannot modify domain %s which you don't have." % (domainName, ))
+        
+        elif len(domainInfo) == 0:
+            # non-existing 4th-level domain name
+            raise OperationError(OperationErrors.PermissionDenied, "You cannot modify domain %s which you don't have." % (domainName, ))
 
         elif len(domainInfo) == 1 and domainInfo[0][1] == user['uid']:
             # domain is yours, you can not register it again
             if action == "APPLY":
                 raise OperationError(OperationErrors.AssignedDomainName, "%s is being used." % (domainName, ))
             return True
-        
+        print(len(domainInfo), domainInfo)
         # domain is not yours, you cannot do anything
         raise OperationError(OperationErrors.PermissionDenied, "You cannot modify domain %s." % (domainName, ))
 

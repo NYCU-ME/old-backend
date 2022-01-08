@@ -3,8 +3,25 @@ from __main__ import app, g, users, dns
 from controllers.users import OperationError
 from controllers.dns import DNSError
 
+import re, ipaddress
+
+domainRegex = re.compile(r'^([A-Za-z0-9]\.|[A-Za-z0-9][A-Za-z0-9-]{0,61}[A-Za-z0-9]\.){1,3}[A-Za-z]{2,6}$')
+
+def isIP(addr, protocol = ipaddress.IPv4Address):
+    try:
+        ip = ipaddress.ip_address(addr)
+        if isinstance(ip, protocol):
+            return str(ip)
+        return False
+    except:
+        return False
+
+def isDomain(domain):
+    return domainRegex.fullmatch(domain)
+
 @app.route("/ddns/<path:domain>/records/<string:type_>/<string:value>", methods=['POST'])
 def addRecord(domain, type_, value):
+
     if not g.user:
         return {"message": "Unauth."}, 401
 
@@ -16,12 +33,32 @@ def addRecord(domain, type_, value):
     req = request.json
     ttl = 5
     
-    if req and 'ttl' in req:
+    if req and 'ttl' in req and req[ttl].isnumeric() and 0 < int(req[ttl]) <= 86400:
         ttl = int(req[ttl])
 
     try:
+
+        if type_ == 'A':
+            if not isIP(value, ipaddress.IPv4Address):
+                return {"errorType": "DNSError", "msg": "Type A with non-IPv4 value."}, 403
+
+            value = isIP(value, ipaddress.IPv4Address)
+
+        if type_ == 'AAAA':
+            if not isIP(value, ipaddress.IPv6Address):
+                return {"errorType": "DNSError", "msg": "Type AAAA with non-IPv6 value."}, 403
+
+            value = isIP(value, ipaddress.IPv6Address)
+
+        if type_ == 'CNAME' and not isDomain(domainName):
+            return {"errorType": "DNSError", "msg": "Type CNAME with non-domain-name value."}, 403
+
+        if type_ == 'MX' and not isDomain(domainName):
+            return {"errorType": "DNSError", "msg": "Type MX with non-domain-name value."}, 403
+
         if not users.authorize(user, "MODIFY", domainStruct):
             return {"errorType": "PermissionDenied", "msg": ""}, 403
+
         dns.addRecord(user['uid'], domain, type_, value, ttl)
     except OperationError as e:
         return {"errorType": e.typ, "msg": e.msg}, 403
@@ -32,6 +69,7 @@ def addRecord(domain, type_, value):
 
 @app.route("/ddns/<path:domain>/records/<string:type_>/<string:value>", methods=['DELETE'])
 def delRecord(domain, type_, value):
+
     if not g.user:
         return {"message": "Unauth."}, 401
 

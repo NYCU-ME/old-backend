@@ -40,3 +40,26 @@ def releaseDomain(domain):
         return {"errorType": e.typ, "msg": e.msg}, 403
 
     return {"msg": "ok"}
+
+
+@app.route("/renew/<path:domain>", methods=['POST'])
+def renewDomain(domain):
+    if not g.user:
+        return {"message": "Unauth."}, 401
+
+    user         = users.getUser(g.user['uid'])
+    domainStruct = domain.strip('/').split('/')
+    domainName   = '.'.join(reversed(domainStruct))
+    domain       = dns.getDomain(domainName)
+
+    try:
+        if not users.authorize(user, "RENEW", domainStruct):
+            return {"errorType": "PermissionDenied", "msg": ""}, 403
+        dns.renewDomain(domain)
+    except OperationError as e:
+        return {"errorType": e.typ, "msg": e.msg}, 403
+
+    return {"msg": "ok"}
+
+
+
