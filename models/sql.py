@@ -72,15 +72,20 @@ class MySQL():
             cur.execute("UPDATE `users` SET `status` = %s WHERE `id` = %s", (status, uid))
 
     @check
+    def searchOutdate(self):
+        with self.db.cursor() as cur:
+            cur.execute("SELECT `id`, `userId`, `domain`, `regDate`, `expDate` FROM `domains` WHERE expDate < now() and status = 1;")
+            return cur.fetchall()
+    @check
     def listUserDomains(self, uid):
         with self.db.cursor() as cur:
-            cur.execute("SELECT `id`, `domain`, `regDate`, `expDate` FROM `domains` WHERE `userId` = %s and `status` = 1", (uid, ))
+            cur.execute("SELECT `id`, `userId`, `domain`, `regDate`, `expDate` FROM `domains` WHERE `userId` = %s and `status` = 1", (uid, ))
             return cur.fetchall()
 
     @check
     def searchDomain(self, domain):
         with self.db.cursor() as cur:
-            cur.execute("SELECT `id`, `userId`, `regDate`, `expDate` FROM `domains` WHERE `expDate` >= NOW() AND `domain` = %s", (domain, ))
+            cur.execute("SELECT `id`, `userId`, `domain`, `regDate`, `expDate` FROM `domains` WHERE `expDate` >= NOW() AND `domain` = %s", (domain, ))
             return cur.fetchall()
 
     @check

@@ -66,7 +66,7 @@ class Users:
         user['domains'] = []
 
         for domain in self.__listUserDomains(user['uid']):
-            user['domains'].append(domain[1]) # domainName
+            user['domains'].append(domain[2]) # domainName
 
         return user
 
@@ -199,7 +199,7 @@ class Users:
             if action == "APPLY":
                 raise OperationError(OperationErrors.AssignedDomainName, "%s is being used." % (domainName, ))
             return True
-        print(len(domainInfo), domainInfo)
+            
         # domain is not yours, you cannot do anything
         raise OperationError(OperationErrors.PermissionDenied, "You cannot modify domain %s." % (domainName, ))
 

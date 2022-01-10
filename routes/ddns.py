@@ -59,7 +59,7 @@ def addRecord(domain, type_, value):
         if not users.authorize(user, "MODIFY", domainStruct):
             return {"errorType": "PermissionDenied", "msg": ""}, 403
 
-        dns.addRecord(user['uid'], domain, type_, value, ttl)
+        dns.addRecord(domain, type_, value, ttl)
     except OperationError as e:
         return {"errorType": e.typ, "msg": e.msg}, 403
     except DNSError as e:
@@ -81,7 +81,7 @@ def delRecord(domain, type_, value):
     try:
         if not users.authorize(user, "MODIFY", domainStruct):
             return {"errorType": "PermissionDenied", "msg": ""}, 403
-        dns.delRecord(user['uid'], domain, type_, value)
+        dns.delRecord(domain, type_, value)
     except OperationError as e:
         return {"errorType": e.typ, "msg": e.msg}, 403
     except DNSError as e:

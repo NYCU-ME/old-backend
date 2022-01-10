@@ -35,7 +35,7 @@ def releaseDomain(domain):
     try:
         if not users.authorize(user, "REPLEASE", domainStruct):
             return {"errorType": "PermissionDenied", "msg": ""}, 403
-        dns.releaseDomain(user['uid'], domain)
+        dns.releaseDomain(domain)
     except OperationError as e:
         return {"errorType": e.typ, "msg": e.msg}, 403
 

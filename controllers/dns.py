@@ -1,5 +1,6 @@
 import _thread
 from enum import Enum
+import time
 
 class DNSErrors(Enum):
 
@@ -29,6 +30,7 @@ class DNS():
         self.ddns    = ddns
         
         self.rectypes = AllowedRecordType
+        _thread.start_new_thread(self.__check_outdate, tuple())
 
     def __listRecords(self, domainId, type_ = None):
 
@@ -44,25 +46,37 @@ class DNS():
         self.sql.delRecord(domain['id'], type_, value)
         self.ddns.delRecord(domain['domainName'], type_, value)
 
+    def __getDomain(self, domain_entry):
+
+        domain = {}
+        domain['id'], domain['userId'], domain['domainName'], domain['regDate'], domain['expDate'] = domain_entry
+        domain['status'] = 1
+        domain['records'] = []
+
+        for rec in self.__listRecords(domain['id']):
+
+            domain['records'].append({
+                'type': rec[0],
+                'value': rec[1],
+                'ttl': rec[2]
+                })
+
+        return domain
+
+    def __check_outdate(self):
+        while True:
+            for domain in self.sql.searchOutdate():
+                domain = self.__getDomain(domain)
+                self.releaseDomain(domain)
+            time.sleep(5)
 
     def getDomain(self, domainName):
 
         domain_entry = self.sql.searchDomain(domainName)
         domain = {'domainName': domainName, 'status': 0}
-
+    
         if domain_entry:
-
-            domain['id'], domain['userId'], domain['regDate'], domain['expDate'] = domain_entry[0]
-            domain['status'] = 1
-            domain['records'] = []
-
-            for rec in self.__listRecords(domain['id']):
-
-                domain['records'].append({
-                    'type': rec[0],
-                    'value': rec[1],
-                    'ttl': rec[2]
-                    })
+            domain.update(self.__getDomain(domain_entry[0]))
 
         return domain
 
@@ -74,7 +88,7 @@ class DNS():
 
         self.sql.renewDomain(domain['id'])
 
-    def releaseDomain(self, uid, domain):
+    def releaseDomain(self, domain):
 
         for i in self.__listRecords(domain['id']):
             type_, value, ttl = i
@@ -82,7 +96,7 @@ class DNS():
 
         self.sql.releaseDomain(domain['id'])
 
-    def addRecord(self, uid, domain, type_, value, ttl):
+    def addRecord(self, domain, type_, value, ttl):
         
         if type_ not in self.rectypes:
             raise DNSError(DNSErrors.NotAllowedRecordType, "You cannot add a new record with type %s" % (type_, ))
@@ -93,7 +107,7 @@ class DNS():
 
         self.__addRecord(domain, type_, value, ttl)
 
-    def delRecord(self, uid, domain, type_, value):
+    def delRecord(self, domain, type_, value):
 
         if type_ not in self.rectypes:
             raise DNSError(DNSErrors.NotAllowedRecordType, "You cannot have a record with type %s" % (type_, ))
