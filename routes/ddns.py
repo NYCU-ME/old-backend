@@ -34,7 +34,7 @@ def addRecord(domain, type_, value):
     ttl = 5
     
     if req and 'ttl' in req and req['ttl'].isnumeric() and 0 < int(req['ttl']) <= 86400:
-        ttl = int(req[ttl])
+        ttl = int(req['ttl'])
 
     try:
 
