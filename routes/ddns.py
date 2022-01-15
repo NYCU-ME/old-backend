@@ -33,7 +33,7 @@ def addRecord(domain, type_, value):
     req = request.json
     ttl = 5
     
-    if req and 'ttl' in req and req[ttl].isnumeric() and 0 < int(req[ttl]) <= 86400:
+    if req and 'ttl' in req and req['ttl'].isnumeric() and 0 < int(req['ttl']) <= 86400:
         ttl = int(req[ttl])
 
     try:
