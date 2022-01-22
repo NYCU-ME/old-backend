@@ -1,0 +1,16 @@
+[Unit]
+Description=NYCU-ME API Server
+Documentation=https://github.com/NYCU-ME
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/flask_app
+
+ExecStart=/opt/flask_app/start.sh
+PIDFile=/var/run/nycume-api.pid
+
+ExecStop=/opt/flask_app/stop.sh
+
+[Install]
+WantedBy=multi-user.target

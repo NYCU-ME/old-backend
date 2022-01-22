@@ -4,3 +4,4 @@ sftp-config.json
 __pycache__
 *.swp
 *.log
+venv
