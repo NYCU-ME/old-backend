@@ -20,8 +20,8 @@ flask_cors.CORS(app)
 #models
 sql     = MySQL(logging.getLogger("SQL Models"), MySQL_Host, MySQL_User, MySQL_Pswd, MySQL_DB)
 ddns    = DDNS(logging.getLogger("DDNS Models"), DDNS_KeyFile, DDNS_Server, DDNS_Zone)
-nycu_oauth = Oauth(redirect_uri = NYCU_Oauth_rURL, 
-                   client_id = NYCU_Oauth_ID, 
+nycu_oauth = Oauth(redirect_uri = NYCU_Oauth_rURL,
+                   client_id = NYCU_Oauth_ID,
                    client_secret = NYCU_Oauth_key)
 
 #controller
@@ -30,7 +30,4 @@ dns     = DNS(logging.getLogger("DNS Controller"), sql, ddns, Allowed_RecordType
 
 #route
 from routes import *
-
-if __name__ == "__main__":
-    app.run("127.0.0.1", port=8080, debug=True)
 
