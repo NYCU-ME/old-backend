@@ -2,6 +2,7 @@ import hashlib
 import socket
 import os
 import time
+import unittest
 
 from flask import Flask, g, Response, request, abort
 import flask_cors
@@ -69,4 +70,10 @@ def sync_repo_endpoint():
             return ""
     else:
         abort(403)
+
+#tests
+@app.cli.command()
+def test():
+    tests = unittest.TestLoader().discover("tests")
+    unittest.TextTestRunner(verbosity=2).run(tests)
 
