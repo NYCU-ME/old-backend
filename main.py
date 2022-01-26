@@ -1,4 +1,9 @@
-from flask import Flask, g, Response, request
+import hashlib
+import socket
+import os
+import time
+
+from flask import Flask, g, Response, request, abort
 import flask_cors
 
 from datetime import timezone, datetime
@@ -30,4 +35,38 @@ dns     = DNS(logging.getLogger("DNS Controller"), sql, ddns, Allowed_RecordType
 
 #route
 from routes import *
+
+def check_github_signature(payload, github_signature):
+    key = bytes(GH_Secret, "utf-8")
+    digester = hmac.new(key=key, msg=payload, digestmod=hashlib.sha256)
+    signature = digester.hexdigest()
+    return "sha256=" + signature == github_signature
+
+@app.route("/sync_repo", methods=["POST"])
+def sync_repo_endpoint():
+    github_signature = request.headers.get("X-Hub-Signature-256")
+    if not github_signature:
+        abort(401)
+    secret = hashlib.sha256()
+    secret.update(GH_Secret.encode("utf-8"))
+    if check_github_signature(request.data, github_signature):
+        sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        sock.connect(SocketFilePath)
+        successful = False
+        fail_count = 0
+        while not successful and fail_count < 10:
+            try:
+                sock.sendall(b"update")
+                time.sleep(0.2)
+            except:
+                pass
+            else:
+                successful = True
+                sock.close()
+        if not successful:
+            abort(503)
+        else:
+            return ""
+    else:
+        abort(403)
 
