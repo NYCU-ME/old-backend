@@ -65,10 +65,14 @@ class DDNS:
 
     def addRecord(self, domain, rectype, value, ttl = 5):
         if domain != "" and rectype != "" and value != "":
+            if rectype == "TXT":
+                value = '"%s"' % value.replace('"', '\"')
             self.queue.put("update add %s %d %s %s" % (domain, ttl, rectype, value))
 
     def delRecord(self, domain, rectype, value):
         if domain != "":
+            if rectype == "TXT":
+                value = '"%s"' % value.replace('"', '\"')
             self.queue.put("update delete %s %s %s" % (domain, rectype, value))
 
 if __name__ == "__main__":
