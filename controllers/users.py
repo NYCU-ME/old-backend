@@ -119,12 +119,13 @@ class Users:
             try:
                 payload = jwt.decode(token, self.JWT_secretKey, algorithms=["HS256"])
             except Exception as e:
-                raise UnauthorizedError(e.__repr__())
+                self.logger.warning(e.__str__())
+                return None
             
             return payload
 
         except UnauthorizedError as e:
-            self.logger.warning(e.__str__())
+            # self.logger.warning(e.__str__())
             return None
 
     def authorize(self, user, action, domain):
