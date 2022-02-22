@@ -67,6 +67,7 @@ class DNS():
         while True:
             for domain in self.sql.searchOutdate():
                 domain = self.__getDomain(domain)
+                self.logger.info("%s owned by %s has expired!" % (domain['domainName'], domain['userId']))
                 self.releaseDomain(domain)
             time.sleep(5)
 
