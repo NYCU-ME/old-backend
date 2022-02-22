@@ -1,5 +1,5 @@
 from flask import Response, request
-from __main__ import app, g, users, nycu_oauth, dns
+from main import app, g, users, nycu_oauth, dns
 
 @app.before_request
 def before_request():
