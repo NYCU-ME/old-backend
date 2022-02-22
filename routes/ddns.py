@@ -19,6 +19,32 @@ def isIP(addr, protocol = ipaddress.IPv4Address):
 def isDomain(domain):
     return domainRegex.fullmatch(domain)
 
+def checkType(type_, value):
+
+    if type_ == 'A':
+        if not isIP(value, ipaddress.IPv4Address):
+            return {"errorType": "DNSError", "msg": "Type A with non-IPv4 value."}, 403
+
+        value = isIP(value, ipaddress.IPv4Address)
+
+    if type_ == 'AAAA':
+        if not isIP(value, ipaddress.IPv6Address):
+            return {"errorType": "DNSError", "msg": "Type AAAA with non-IPv6 value."}, 403
+
+        value = isIP(value, ipaddress.IPv6Address)
+
+    if type_ == 'CNAME' and not isDomain(value):
+        return {"errorType": "DNSError", "msg": "Type CNAME with non-domain-name value."}, 403
+
+    if type_ == 'MX' and not isDomain(value):
+        return {"errorType": "DNSError", "msg": "Type MX with non-domain-name value."}, 403
+
+    if type_ == 'TXT' and (len(value) > 255 or value.count('\n')):
+        return {"errorType": "DNSError", "msg": "Type TXT with value longer than 255 chars or more than 1 line."}, 403
+
+    return None
+
+
 @app.route("/ddns/<path:domain>/records/<string:type_>/<string:value>", methods=['POST'])
 def addRecord(domain, type_, value):
 
@@ -37,24 +63,10 @@ def addRecord(domain, type_, value):
         ttl = int(req['ttl'])
 
     try:
-
-        if type_ == 'A':
-            if not isIP(value, ipaddress.IPv4Address):
-                return {"errorType": "DNSError", "msg": "Type A with non-IPv4 value."}, 403
-
-            value = isIP(value, ipaddress.IPv4Address)
-
-        if type_ == 'AAAA':
-            if not isIP(value, ipaddress.IPv6Address):
-                return {"errorType": "DNSError", "msg": "Type AAAA with non-IPv6 value."}, 403
-
-            value = isIP(value, ipaddress.IPv6Address)
-
-        if type_ == 'CNAME' and not isDomain(domainName):
-            return {"errorType": "DNSError", "msg": "Type CNAME with non-domain-name value."}, 403
-
-        if type_ == 'MX' and not isDomain(domainName):
-            return {"errorType": "DNSError", "msg": "Type MX with non-domain-name value."}, 403
+        
+        test = checkType(type_, value)
+        if test:
+            return test
 
         if not users.authorize(user, "MODIFY", domainStruct):
             return {"errorType": "PermissionDenied", "msg": ""}, 403
@@ -79,6 +91,10 @@ def delRecord(domain, type_, value):
     domain       = dns.getDomain(domainName)
 
     try:
+        test = checkType(type_, value)
+        if test:
+            return test
+
         if not users.authorize(user, "MODIFY", domainStruct):
             return {"errorType": "PermissionDenied", "msg": ""}, 403
         dns.delRecord(domain, type_, value)
