@@ -3,8 +3,8 @@ import time
 import os
 from config import SocketFilePath, ServiceName
 
-if os.path.exists(FILE):
-    os.path.unlink(FILE)
+if os.path.exists(SocketFilePath):
+    os.remove(SocketFilePath)
 
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 sock.bind(SocketFilePath)
