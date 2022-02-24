@@ -18,7 +18,7 @@ from controllers.dns  import DNS
 
 from config import *
 
-logging.basicConfig(encoding="utf-8", level=Logging_Level,
+logging.basicConfig(encoding="utf-8", level=Logging_Level, filename="/var/log/flask.log",
                     format=Logging_Format, datefmt=Logging_DatetimeFormat)
 app = Flask(__name__)
 flask_cors.CORS(app)
