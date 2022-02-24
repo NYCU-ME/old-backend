@@ -3,6 +3,7 @@ import socket
 import os
 import time
 import unittest
+import hmac
 
 from flask import Flask, g, Response, request, abort
 import flask_cors
