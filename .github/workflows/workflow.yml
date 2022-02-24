@@ -24,3 +24,5 @@ jobs:
     - name: Test
       run: |
         flask test
+      env:
+        FLASK_APP: main.py
