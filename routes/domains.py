@@ -9,7 +9,7 @@ def applyDomain(domain):
         return {"message": "Unauth."}, 401
 
     user         = users.getUser(g.user['uid'])
-    domainStruct = domain.strip('/').split('/')
+    domainStruct = domain.lower().strip('/').split('/')
     domainName   = '.'.join(reversed(domainStruct))
     domain       = dns.getDomain(domainName)
 
@@ -28,7 +28,7 @@ def releaseDomain(domain):
         return {"message": "Unauth."}, 401
 
     user         = users.getUser(g.user['uid'])
-    domainStruct = domain.strip('/').split('/')
+    domainStruct = domain.lower().strip('/').split('/')
     domainName   = '.'.join(reversed(domainStruct))
     domain       = dns.getDomain(domainName)
 
@@ -48,7 +48,7 @@ def renewDomain(domain):
         return {"message": "Unauth."}, 401
 
     user         = users.getUser(g.user['uid'])
-    domainStruct = domain.strip('/').split('/')
+    domainStruct = domain.lower().strip('/').split('/')
     domainName   = '.'.join(reversed(domainStruct))
     domain       = dns.getDomain(domainName)
 

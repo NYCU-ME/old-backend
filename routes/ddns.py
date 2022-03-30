@@ -52,7 +52,7 @@ def addRecord(domain, type_, value):
         return {"message": "Unauth."}, 401
 
     user         = users.getUser(g.user['uid'])
-    domainStruct = domain.strip('/').split('/')
+    domainStruct = domain.lower().strip('/').split('/')
     domainName   = '.'.join(reversed(domainStruct))
     domain       = dns.getDomain(domainName)
 
@@ -86,7 +86,7 @@ def delRecord(domain, type_, value):
         return {"message": "Unauth."}, 401
 
     user         = users.getUser(g.user['uid'])
-    domainStruct = domain.strip('/').split('/')
+    domainStruct = domain.lower().strip('/').split('/')
     domainName   = '.'.join(reversed(domainStruct))
     domain       = dns.getDomain(domainName)
 
