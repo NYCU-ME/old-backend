@@ -3,7 +3,7 @@ import re
 from enum import Enum
 from datetime import timezone, datetime
 
-domainRegex = re.compile(r"^[A-Za-z0-9_]{2,}$")
+domainRegex = re.compile(r"^(?!-)[A-Za-z0-9_]{1,63}(?<!-)$")
 
 class UnauthorizedError(Exception):
 
@@ -138,8 +138,6 @@ class Users:
             for p in domain:
                 # check if the domain is valid
                 if not domainRegex.fullmatch(p):
-                    return None
-                if p[0] == '-' or p[-1] == '-':
                     return None
 
             def isMatch(rule, sample):
