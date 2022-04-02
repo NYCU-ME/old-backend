@@ -65,10 +65,13 @@ class DNS():
 
     def __check_outdate(self):
         while True:
-            for domain in self.sql.searchOutdate():
-                domain = self.__getDomain(domain)
-                self.logger.info("%s owned by %s has expired!" % (domain['domainName'], domain['userId']))
-                self.releaseDomain(domain)
+            try:
+                for domain in self.sql.searchOutdate():
+                    domain = self.__getDomain(domain)
+                    self.logger.info("%s owned by %s has expired!" % (domain['domainName'], domain['userId']))
+                    self.releaseDomain(domain)
+            except Exception as e:
+                self.logger.warning(e.__repr__())
             time.sleep(5)
 
     def getDomain(self, domainName):
