@@ -6,7 +6,7 @@ class DNSErrors(Enum):
 
     NXDomain             = "Non-ExistentDomain"
     NotAllowedRecordType = "NotAllowedRecordType"
-    DuplicateRecord      = "DuplicateRecord" 
+    DuplicatedRecord      = "DuplicatedRecord"
     NotAllowedOperation  = "NotAllowedOperation" 
 
 class DNSError(Exception):
@@ -107,7 +107,7 @@ class DNS():
 
         for rec in domain['records']:
             if rec['type'] == type_ and rec['value'] == value:
-                raise DNSError(DNSErrors.DuplicateRecord, "You have created same record.")
+                raise DNSError(DNSErrors.DuplicatedRecord, "You have created same record.")
 
         self.__addRecord(domain, type_, value, ttl)
 
